@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SweetMeet - Swim Meet Event Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #111827;
+      --accent: #22c55e;
+      --accent-soft: rgba(34, 197, 94, 0.15);
+      --accent-strong: #16a34a;
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --border-subtle: #1f2937;
+      --danger: #f97316;
+      --favorite-bg: #fef3c7;
+      --favorite-border: #facc15;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1f2937 0, #020617 55%);
+      color: var(--text-main);
+    }
+
+    .app {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+      padding: 12px 12px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    header {
+      text-align: center;
+      padding: 8px 10px 6px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.4rem;
+      letter-spacing: 0.03em;
+    }
+
+    header p {
+      margin: 4px 0 0;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .info-box {
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(59, 130, 246, 0.1));
+      border-radius: 14px;
+      padding: 8px 10px;
+      font-size: 0.85rem;
+      line-height: 1.3;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.6);
+    }
+
+    .info-box strong {
+      color: var(--accent-strong);
+    }
+
+    .nav-bar {
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+    }
+
+    .nav-btn {
+      flex: 0 0 48px;
+      border-radius: 16px;
+      border: 1px solid var(--border-subtle);
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--text-main);
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s, border-color 0.15s, opacity 0.15s;
+    }
+
+    .nav-btn:active:not(:disabled) {
+      transform: scale(0.96);
+      background: #020617;
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    .event-header {
+      flex: 1;
+      padding: 8px 10px;
+      border-radius: 18px;
+      background: radial-gradient(circle at top left, #1e293b 0, #020617 70%);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      transition: opacity 0.2s, filter 0.2s;
+    }
+
+    .event-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+
+    .event-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .event-meta {
+      font-size: 0.78rem;
+      color: var(--accent);
+      margin-top: 2px;
+    }
+
+    .event-meta .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 1px 6px;
+      margin-left: 4px;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, 0.14);
+      border: 1px solid rgba(34, 197, 94, 0.4);
+      font-size: 0.73rem;
+    }
+
+    .event-header.event-done {
+      opacity: 0.5;
+      filter: grayscale(0.55);
+    }
+
+    .controls-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 16px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .checkbox-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .checkbox-wrap input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      border-radius: 6px;
+      border: 1px solid var(--border-subtle);
+      accent-color: var(--accent);
+    }
+
+    .next-fav-btn {
+      flex: 0 0 auto;
+      border-radius: 999px;
+      border: none;
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      color: #022c22;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      box-shadow: 0 6px 15px rgba(22, 163, 74, 0.6);
+      transition: transform 0.1s, box-shadow 0.1s, filter 0.1s;
+      white-space: nowrap;
+    }
+
+    .next-fav-btn:active {
+      transform: translateY(1px) scale(0.98);
+      box-shadow: 0 3px 8px rgba(22, 163, 74, 0.45);
+      filter: brightness(0.95);
+    }
+
+    .event-panel {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 10px;
+      border-radius: 18px;
+      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid var(--border-subtle);
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.8);
+    }
+
+    .event-panel h2 {
+      margin: 0;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    .swimmer-list {
+      margin-top: 6px;
+      padding: 0;
+      list-style: none;
+      max-height: calc(100vh - 305px);
+      overflow-y: auto;
+      border-radius: 12px;
+      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.98), #020617);
+      border: 1px solid rgba(30, 64, 175, 0.45);
+    }
+
+    @media (min-height: 750px) {
+      .swimmer-list {
+        max-height: calc(100vh - 340px);
+      }
+    }
+
+    .swimmer-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      font-size: 0.9rem;
+      border-bottom: 1px solid rgba(31, 41, 55, 0.85);
+    }
+
+    .swimmer-row:last-child {
+      border-bottom: none;
+    }
+
+    .swimmer-name {
+      flex: 1;
+      padding-right: 6px;
+      color: #e5e7eb;
+    }
+
+    .swimmer-time {
+      flex: 0 0 auto;
+      font-variant-numeric: tabular-nums;
+      font-size: 0.86rem;
+      color: var(--text-muted);
+    }
+
+    .swimmer-row.favorite {
+      background-color: var(--favorite-bg);
+      border-left: 3px solid var(--favorite-border);
+      font-weight: 600;
+      color: #1f2933;
+    }
+
+    .swimmer-row.favorite .swimmer-name {
+      color: #1f2933;
+    }
+
+    .swimmer-row.favorite .swimmer-time {
+      color: #4b5563;
+    }
+
+    .fav-tag {
+      font-size: 0.72rem;
+      background: rgba(234, 179, 8, 0.16);
+      border-radius: 999px;
+      padding: 1px 6px;
+      margin-left: 6px;
+      color: #854d0e;
+      border: 1px solid rgba(234, 179, 8, 0.6);
+    }
+
+    .empty-state {
+      padding: 8px 10px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    /* Thin scrollbars for swimmer list */
+    .swimmer-list::-webkit-scrollbar {
+      width: 6px;
+    }
+    .swimmer-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .swimmer-list::-webkit-scrollbar-thumb {
+      background-color: rgba(148, 163, 184, 0.6);
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>Swim Meet Event Tracker</h1>
+      <p id="meetName">Loading meet name…</p>
+    </header>
+
+    <section id="infoBox" class="info-box">
+      Loading event information…
+    </section>
+
+    <section class="nav-bar">
+      <button id="prevBtn" class="nav-btn" aria-label="Previous event">◀️</button>
+      <div id="eventHeader" class="event-header">
+        <div id="eventTitle" class="event-title">Event …</div>
+        <div id="eventDescription" class="event-desc">Description</div>
+        <div id="eventMeta" class="event-meta">Event ? of ?</div>
+      </div>
+      <button id="nextBtn" class="nav-btn" aria-label="Next event">▶️</button>
+    </section>
+
+    <section class="controls-row">
+      <label class="checkbox-wrap">
+        <input type="checkbox" id="doneCheckbox" />
+        <span>Mark event as done</span>
+      </label>
+      <button id="nextFavBtn" class="next-fav-btn">
+        Next my event
+      </button>
+    </section>
+
+    <section class="event-panel">
+      <h2 id="eventPanelTitle">Swimmers &amp; seed times</h2>
+      <ul id="swimmerList" class="swimmer-list"></ul>
+      <div id="emptyState" class="empty-state" style="display: none;">
+        No swimmers found for this event.
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // Raw meet text from the uploaded "Meet #3 Events.pdf"
+    const meetText = `
+Manchester Branch YMCA (IY-MM)
+7540 Hull Street Road, Richmond, VA 23235
+
+Meet Entry Report
+
+Meet: Fall Meet #3 @ TK vs MN & GO (Location: Tuckahoe YMCA)
+Date: 11/15/2025 - 11/15/2025 (Ageup Date: 09/01/2025)
+
+Abercrombie, Davis (10)
+# 28A Boy 9-10 100 Medley 1:40.40S
+
+# 34A Boy 9-10 50 Breast 58.34S
+
+# 42A Boy 9-10 50 Fly 45.81S
+
+# 47 X 9-10 200 Free Relay A 1:00.00Y
+
+Aponte, Ayanna (8)
+# 5B Girl 7-8 25 Free 24.15S
+
+# 11B Girl 7-8 25 Back 37.74S
+
+# 45B Girl 7-8 100 Free NT
+
+# 2 X 7-8 100 Free Relay B 2:00.00Y
+
+Bowman, Grace (12)
+# 7B Girl 11-12 50 Free 44.86S
+
+# 27B Girl 11-12 100 Medley 2:08.53S
+
+# 41B Girl 11-12 50 Fly NT
+
+# 48 X 11-12 200 Free Relay D 3:00.00Y
+
+Bowman, Jane (14)
+# 3B Girl 13-14 200 Free 3:17.17S
+
+# 23A Girl 13-14 100 Free 1:29.93S
+
+# 37B Girl 13-14 100 Back 1:49.27S
+
+# 49 X 13-14 200 Free Relay B 3:00.00Y
+
+Bowman, Lucille (9)
+# 7A Girl 9-10 50 Free 55.16S
+
+# 13A Girl 9-10 50 Back 1:10.67S
+
+# 21A Girl 9-10 100 Free 2:16.89S
+
+# 47 X 9-10 200 Free Relay D 3:00.00Y
+
+Copley, Trent (10)
+# 14A Boy 9-10 50 Back 48.25S
+
+# 28A Boy 9-10 100 Medley NT
+
+# 42A Boy 9-10 50 Fly 59.65S
+
+# 47 X 9-10 200 Free Relay B 2:00.00Y
+
+Davis, Gabriel (9)
+# 8A Boy 9-10 50 Free 1:02.37S
+
+# 14A Boy 9-10 50 Back 1:08.31S
+
+# 22A Boy 9-10 100 Free 2:45.41S
+
+# 47 X 9-10 200 Free Relay D 3:00.00Y
+
+Ferguson, Nicholas (14)
+# 30A Boy 13-14 100 Medley 1:23.06S
+
+# 36A Boy 13-14 50 Breast 48.34S
+
+# 44A Boy 13-14 50 Fly 34.57S
+
+# 49 X 13-14 200 Free Relay A 2:00.00Y
+
+Garbriel-Sales, Alonzo (17)
+# 10C Boy 17-18 50 Free 34.43S
+
+
+
+# 16C Boy 17-18 50 Back NT
+
+# 36C Boy 17-18 50 Breast 45.09S
+
+# 50 X 15-18 200 Free Relay B 1:00.00Y
+
+Glover, Eleanor (10)
+# 7A Girl 9-10 50 Free 43.47S
+
+# 21A Girl 9-10 100 Free 1:46.46S
+
+# 41A Girl 9-10 50 Fly NT
+
+# 47 X 9-10 200 Free Relay B 2:00.00Y
+
+Gull, Charles (7)
+# 6B Boy 7-8 25 Free 35.95S
+
+# 12B Boy 7-8 25 Back 35.01S
+
+# 26B Boy 7-8 50 Back NT
+
+# 2 X 7-8 100 Free Relay C 3:00.00Y
+
+Gull, Devin (5)
+# 6A Boy 6 & Under 25 Free 40.12S
+
+# 12A Boy 6 & Under 25 Back 42.19S
+
+# 26A Boy 6 & Under 50 Back NT
+
+# 1 X 6 & Under 100 Free Relay A 1:00.00Y
+
+Hall, Sophia Dakota (9)
+# 7A Girl 9-10 50 Free 56.09S
+
+# 13A Girl 9-10 50 Back 1:01.19S
+
+# 21A Girl 9-10 100 Free NT
+
+# 47 X 9-10 200 Free Relay D 3:00.00Y
+
+Harris, Emily (14)
+# 9A Girl 13-14 50 Free 38.76S
+
+# 23A Girl 13-14 100 Free 1:26.81S
+
+# 35A Girl 13-14 50 Breast 50.03S
+
+# 49 X 13-14 200 Free Relay B 3:00.00Y
+
+Hernandez, Eli (13)
+# 10A Boy 13-14 50 Free 34.65S
+
+# 24A Boy 13-14 100 Free 1:25.34S
+
+# 36A Boy 13-14 50 Breast 48.78S
+
+# 49 X 13-14 200 Free Relay A 2:00.00Y
+
+Idleman, Isaac (13)
+# 30A Boy 13-14 100 Medley 1:26.79S
+
+# 38B Boy 13-14 100 Back 1:45.00S
+
+# 44A Boy 13-14 50 Fly 38.38S
+
+# 49 X 13-14 200 Free Relay A 2:00.00Y
+
+Idleman, Lucas (11)
+# 14B Boy 11-12 50 Back 48.88S
+
+# 28B Boy 11-12 100 Medley 1:48.85S
+
+# 34B Boy 11-12 50 Breast 52.69S
+
+# 48 X 11-12 200 Free Relay C 3:00.00Y
+
+Idleman, Ruthie (8)
+# 11B Girl 7-8 25 Back 26.02S
+
+# 31B Girl 7-8 25 Breast 33.20S
+
+# 39B Girl 7-8 25 Fly 25.75S
+
+# 2 X 7-8 100 Free Relay A 1:00.00Y
+
+
+
+King, Eleanor (5)
+# 5A Girl 6 & Under 25 Free 30.91S
+
+# 11A Girl 6 & Under 25 Back 50.56S
+
+# 25A Girl 6 & Under 50 Back 1:33.61S
+
+# 1 X 6 & Under 100 Free Relay A 1:00.00Y
+
+King, Henry (10)
+# 8A Boy 9-10 50 Free 42.35S
+
+# 14A Boy 9-10 50 Back 1:01.57S
+
+# 34A Boy 9-10 50 Breast 58.56S
+
+# 47 X 9-10 200 Free Relay A 1:00.00Y
+
+King, June (7)
+# 19B Girl 7-8 50 Free 50.35S
+
+# 31B Girl 7-8 25 Breast 31.68S
+
+# 45B Girl 7-8 100 Free 2:29.57S
+
+# 2 X 7-8 100 Free Relay A 1:00.00Y
+
+Klaiber, Charlie (17)
+# 24C Boy 17-18 100 Free 1:06.25S
+
+# 36C Boy 17-18 50 Breast 41.28S
+
+# 44C Boy 17-18 50 Fly 31.25S
+
+# 50 X 15-18 200 Free Relay B 1:00.00Y
+
+Klaiber, Jack (11)
+# 14B Boy 11-12 50 Back 48.34S
+
+# 28B Boy 11-12 100 Medley 1:37.19S
+
+# 34B Boy 11-12 50 Breast 45.50S
+
+# 48 X 11-12 200 Free Relay C 3:00.00Y
+
+Lewis, Dafne Emilia (6)
+# 5A Girl 6 & Under 25 Free 29.00S
+
+# 11A Girl 6 & Under 25 Back 32.38S
+
+# 25A Girl 6 & Under 50 Back NT
+
+# 1 X 6 & Under 100 Free Relay A 1:00.00Y
+
+Maher, Rocco (11)
+# 22B Boy 11-12 100 Free 1:44.60S
+
+# 28B Boy 11-12 100 Medley 2:03.54S
+
+# 34B Boy 11-12 50 Breast 1:05.00S
+
+# 48 X 11-12 200 Free Relay D 3:00.00Y
+
+Maher, Shirley (9)
+# 7A Girl 9-10 50 Free 45.65S
+
+# 13A Girl 9-10 50 Back 1:04.94S
+
+# 21A Girl 9-10 100 Free 1:47.20S
+
+# 47 X 9-10 200 Free Relay C 3:00.00Y
+
+McGee, Henry (12)
+# 8B Boy 11-12 50 Free 34.25S
+
+# 22B Boy 11-12 100 Free 1:22.56S
+
+# 28B Boy 11-12 100 Medley 1:37.82S
+
+# 48 X 11-12 200 Free Relay A 1:00.00Y
+
+Mendoza, Camila (12)
+# 21B Girl 11-12 100 Free 1:37.76S
+
+# 33B Girl 11-12 50 Breast 55.08S
+
+# 41B Girl 11-12 50 Fly 46.20S
+
+
+
+# 48 X 11-12 200 Free Relay D 3:00.00Y
+
+Mendoza, Dayana (11)
+# 7B Girl 11-12 50 Free 38.32S
+
+# 21B Girl 11-12 100 Free 1:33.65S
+
+# 41B Girl 11-12 50 Fly 56.06S
+
+# 48 X 11-12 200 Free Relay B 2:00.00Y
+
+Moody, Ember (11)
+# 7B Girl 11-12 50 Free 41.03S
+
+# 27B Girl 11-12 100 Medley 1:44.50S
+
+# 33B Girl 11-12 50 Breast 57.32S
+
+# 48 X 11-12 200 Free Relay C 3:00.00Y
+
+Palese, Lillian (11)
+# 7B Girl 11-12 50 Free 44.89S
+
+# 17A Girl 11-12 100 Breast NT
+
+# 27B Girl 11-12 100 Medley NT
+
+# 48 X 11-12 200 Free Relay D 3:00.00Y
+
+Peck-Austin, Nasir (9)
+# 8A Boy 9-10 50 Free 53.62S
+
+# 14A Boy 9-10 50 Back 1:13.58S
+
+# 22A Boy 9-10 100 Free 2:32.65S
+
+# 50 X 15-18 200 Free Relay A 2:00.00Y
+
+Petty, Emma (13)
+# 9A Girl 13-14 50 Free 41.72S
+
+# 23A Girl 13-14 100 Free 1:32.72S
+
+# 37B Girl 13-14 100 Back NT
+
+# 49 X 13-14 200 Free Relay B 3:00.00Y
+
+Pope, Amaris (11)
+# 7B Girl 11-12 50 Free 38.51S
+
+# 21B Girl 11-12 100 Free 1:38.00S
+
+# 27B Girl 11-12 100 Medley NT
+
+# 48 X 11-12 200 Free Relay B 2:00.00Y
+
+Pope, Elian (17)
+# 18D Boy 17-18 100 Breast 1:32.22S
+
+# 24C Boy 17-18 100 Free 1:12.02S
+
+# 36C Boy 17-18 50 Breast 40.76S
+
+# 50 X 15-18 200 Free Relay A 2:00.00Y
+
+Pope, Jorah (14)
+# 9A Girl 13-14 50 Free 37.73S
+
+# 23A Girl 13-14 100 Free 1:32.24S
+
+# 43A Girl 13-14 50 Fly NT
+
+# 49 X 13-14 200 Free Relay A 2:00.00Y
+
+Ramirez, Andrew (7)
+# 6B Boy 7-8 25 Free 25.27S
+
+# 32B Boy 7-8 25 Breast 29.26S
+
+# 40B Boy 7-8 25 Fly 29.86S
+
+# 2 X 7-8 100 Free Relay B 2:00.00Y
+
+Ramirez, Vincent (11)
+
+
+
+# 8B Boy 11-12 50 Free 42.12S
+
+# 22B Boy 11-12 100 Free 1:30.72S
+
+# 28B Boy 11-12 100 Medley 1:47.61S
+
+# 48 X 11-12 200 Free Relay A 1:00.00Y
+
+Reed, Olivia (14)
+# 9A Girl 13-14 50 Free 37.15S
+
+# 15A Girl 13-14 50 Back 42.40S
+
+# 29A Girl 13-14 100 Medley 1:38.50S
+
+# 49 X 13-14 200 Free Relay B 3:00.00Y
+
+Robenson, Bella (10)
+# 7A Girl 9-10 50 Free 52.77S
+
+# 13A Girl 9-10 50 Back 1:05.88S
+
+# 21A Girl 9-10 100 Free 2:10.81S
+
+# 47 X 9-10 200 Free Relay C 3:00.00Y
+
+Rojas, Emily (8)
+# 5B Girl 7-8 25 Free 45.87S
+
+# 11B Girl 7-8 25 Back 57.09S
+
+# 25B Girl 7-8 50 Back NT
+
+# 2 X 7-8 100 Free Relay C 3:00.00Y
+
+Rojas, Matthew (10)
+# 8A Boy 9-10 50 Free 1:00.17S
+
+# 14A Boy 9-10 50 Back 1:13.39S
+
+# 22A Boy 9-10 100 Free 2:23.30S
+
+# 47 X 9-10 200 Free Relay D 3:00.00Y
+
+Santos, Hawkins (7)
+# 6B Boy 7-8 25 Free 22.42S
+
+# 12B Boy 7-8 25 Back 29.00S
+
+# 40B Boy 7-8 25 Fly NT
+
+# 2 X 7-8 100 Free Relay A 1:00.00Y
+
+Santos, Mayla (9)
+# 7A Girl 9-10 50 Free 43.50S
+
+# 13A Girl 9-10 50 Back 55.74S
+
+# 21A Girl 9-10 100 Free 1:43.25S
+
+# 47 X 9-10 200 Free Relay B 2:00.00Y
+
+Santos, Sydney (12)
+# 13B Girl 11-12 50 Back 41.31S
+
+# 21B Girl 11-12 100 Free 1:22.81S
+
+# 33B Girl 11-12 50 Breast 49.68S
+
+# 48 X 11-12 200 Free Relay B 2:00.00Y
+
+Schwalm, Lincoln (10)
+# 8A Boy 9-10 50 Free NT
+
+# 14A Boy 9-10 50 Back 46.38S
+
+# 28A Boy 9-10 100 Medley 1:44.63S
+
+# 47 X 9-10 200 Free Relay A 1:00.00Y
+
+Schwalm, Rowan (6)
+# 5A Girl 6 & Under 25 Free 31.21S
+
+# 31A Girl 6 & Under 25 Breast 48.07S
+
+# 45A Girl 6 & Under 100 Free NT
+
+# 1 X 6 & Under 100 Free Relay A 1:00.00Y
+
+
+
+Scott, Anderson (9)
+# 8A Boy 9-10 50 Free 43.60S
+
+# 22A Boy 9-10 100 Free 1:57.52S
+
+# 34A Boy 9-10 50 Breast 52.27S
+
+# 47 X 9-10 200 Free Relay B 2:00.00Y
+
+Scott, Wesley (12)
+# 8B Boy 11-12 50 Free 32.47S
+
+# 22B Boy 11-12 100 Free 1:17.47S
+
+# 34B Boy 11-12 50 Breast 41.77S
+
+# 48 X 11-12 200 Free Relay B 2:00.00Y
+
+Smith, Audrey (12)
+# 7B Girl 11-12 50 Free 48.88S
+
+# 17A Girl 11-12 100 Breast NT
+
+# 21B Girl 11-12 100 Free 2:15.66S
+
+# 50 X 15-18 200 Free Relay B 1:00.00Y
+
+Stafford, Adrianne (8)
+# 5B Girl 7-8 25 Free 32.37S
+
+# 11B Girl 7-8 25 Back 32.10S
+
+# 19B Girl 7-8 50 Free 1:18.69S
+
+# 2 X 7-8 100 Free Relay B 2:00.00Y
+
+Stafford, Mason (17)
+# 3D Girl 17-18 200 Free 3:12.27S
+
+# 15C Girl 17-18 50 Back 47.49S
+
+# 17D Girl 17-18 100 Breast 1:58.08S
+
+Szybisty, Abby (8)
+# 5B Girl 7-8 25 Free 26.98S
+
+# 11B Girl 7-8 25 Back 28.03S
+
+# 25B Girl 7-8 50 Back 1:00.58S
+
+# 2 X 7-8 100 Free Relay B 2:00.00Y
+
+Szybisty, Eleanor (11)
+# 7B Girl 11-12 50 Free 41.78S
+
+# 21B Girl 11-12 100 Free 1:30.02S
+
+# 41B Girl 11-12 50 Fly 50.40S
+
+# 48 X 11-12 200 Free Relay C 3:00.00Y
+
+Thompson, Dean (12)
+# 8B Boy 11-12 50 Free 32.19S
+
+# 22B Boy 11-12 100 Free 1:21.27S
+
+# 34B Boy 11-12 50 Breast 41.07S
+
+# 48 X 11-12 200 Free Relay A 1:00.00Y
+
+Tucker, Ayden (15)
+# 9B Girl 15-16 50 Free 34.59S
+
+# 15B Girl 15-16 50 Back 47.40S
+
+# 23B Girl 15-16 100 Free 1:20.79S
+
+# 50 X 15-18 200 Free Relay A 2:00.00Y
+
+Tucker, Evie (15)
+# 9B Girl 15-16 50 Free 38.22S
+
+# 23B Girl 15-16 100 Free 1:34.35S
+
+# 37C Girl 15-16 100 Back 1:54.65S
+
+# 50 X 15-18 200 Free Relay A 2:00.00Y
+
+
+
+West-Nwagwu, Mosadi (7)
+# 6B Boy 7-8 25 Free 22.70S
+
+# 12B Boy 7-8 25 Back 34.74S
+
+# 40B Boy 7-8 25 Fly NT
+
+# 2 X 7-8 100 Free Relay A 1:00.00Y
+
+Whiddon, Lucy (10)
+# 7A Girl 9-10 50 Free 47.97S
+
+# 13A Girl 9-10 50 Back 59.84S
+
+# 33A Girl 9-10 50 Breast 58.79S
+
+# 47 X 9-10 200 Free Relay A 1:00.00Y
+
+Whiddon, Nina (12)
+# 3A Girl 11-12 200 Free 3:02.50S
+
+# 17A Girl 11-12 100 Breast 1:39.63S
+
+# 27B Girl 11-12 100 Medley 1:38.12S
+
+# 50 X 15-18 200 Free Relay B 1:00.00Y
+
+Williams, Skylar (9)
+# 7A Girl 9-10 50 Free 48.44S
+
+# 21A Girl 9-10 100 Free 2:38.56S
+
+# 33A Girl 9-10 50 Breast NT
+
+# 47 X 9-10 200 Free Relay C 3:00.00Y
+
+Wolfe, Colin (9)
+# 8A Boy 9-10 50 Free 58.95S
+
+# 14A Boy 9-10 50 Back 57.10S
+
+# 28A Boy 9-10 100 Medley NT
+
+# 47 X 9-10 200 Free Relay C 3:00.00Y
+
+Young, Elia (5)
+# 5A Girl 6 & Under 25 Free 53.22S
+
+# 11A Girl 6 & Under 25 Back 1:05.50S
+
+# 25A Girl 6 & Under 50 Back 1:58.44S
+
+# 2 X 7-8 100 Free Relay C 3:00.00Y
+
+Young, Ezra (8)
+# 6B Boy 7-8 25 Free 38.35S
+
+# 12B Boy 7-8 25 Back 36.69S
+
+# 20B Boy 7-8 50 Free NT
+
+# 2 X 7-8 100 Free Relay C 3:00.00Y
+
+Young, Maggie (12)
+# 13B Girl 11-12 50 Back 39.32S
+
+# 27B Girl 11-12 100 Medley 1:31.23S
+
+# 41B Girl 11-12 50 Fly 39.44S
+
+# 48 X 11-12 200 Free Relay A 1:00.00Y
+
+
+
+Female Male Total
+
+Individual Events 111 84 195
+
+Individual Athletes 37 28 65
+
+Relay Events 6
+
+Relay Teams 16
+`;
+
+    const favoriteBaseNames = new Set([
+      "Tucker, Ayden",
+      "Tucker, Evie",
+      "Idleman, Isaac",
+      "Idleman, Lucas",
+      "Idleman, Ruthie"
+    ]);
+
+    function extractMeetName(text) {
+      const match = text.match(/Meet:\s*(.+)/);
+      if (match) return match[1].trim();
+      return "Swim Meet";
+    }
+
+    function parseSeedTime(token) {
+      if (!token) return "NT";
+      if (token === "NT") return "NT";
+      const m = token.match(/^([\d:.]+)[A-Za-z]$/);
+      if (m) return m[1];
+      return token;
+    }
+
+    function parseEvents(raw) {
+      const lines = raw.split(/\r?\n/);
+      const eventsMap = new Map();
+      const eventsArr = [];
+
+      let currentSwimmerBase = null;
+      let currentSwimmerAge = null;
+
+      for (let rawLine of lines) {
+        const line = rawLine.trim();
+        if (!line) continue;
+
+        // Swimmer name line: "Last, First (Age)"
+        const nameMatch = line.match(/^(.+?,\s+.+?)\s+\((\d+)\)/);
+        if (nameMatch) {
+          currentSwimmerBase = nameMatch[1].trim();
+          currentSwimmerAge = nameMatch[2].trim();
+          continue;
+        }
+
+        // Event line starts with '#'
+        if (!line.startsWith("#")) continue;
+
+        const afterHash = line.replace(/^#\s*/, "");
+        const tokens = afterHash.split(/\s+/);
+        if (!tokens.length) continue;
+
+        let eventNumber = null;
+        let heatLetter = "";
+        let descriptionTokens = [];
+        let seedTime = "NT";
+
+        const firstTok = tokens[0];
+
+        // Case 1: "28A" style (event+heat)
+        if (/^\d+[A-Za-z]$/.test(firstTok)) {
+          const numMatch = firstTok.match(/^(\d+)/);
+          eventNumber = numMatch ? parseInt(numMatch[1], 10) : null;
+          const heatMatch = firstTok.match(/\d+([A-Za-z])/);
+          heatLetter = heatMatch ? heatMatch[1].toUpperCase() : "";
+
+          const lastTok = tokens[tokens.length - 1];
+          seedTime = parseSeedTime(lastTok);
+          descriptionTokens = tokens.slice(1, tokens.length - 1);
+        } else {
+          // Case 2: number first, maybe relay or separate heat letter
+          const numMatch = firstTok.match(/^(\d+)$/);
+          if (!numMatch) continue;
+
+          eventNumber = parseInt(numMatch[1], 10);
+
+          const lastTok = tokens[tokens.length - 1];
+          seedTime = parseSeedTime(lastTok);
+
+          const relayIndex = tokens.findIndex(t => t.toLowerCase() === "relay");
+          const isRelay = relayIndex !== -1;
+
+          if (isRelay) {
+            // Relay: heat letter is token after "Relay" if single letter
+            if (relayIndex + 1 < tokens.length - 1 && /^[A-Za-z]$/.test(tokens[relayIndex + 1])) {
+              heatLetter = tokens[relayIndex + 1].toUpperCase();
+            } else {
+              heatLetter = "";
+            }
+            let descSlice = tokens.slice(1, relayIndex + 1);
+            descriptionTokens = descSlice.filter(t => t.toUpperCase() !== "X");
+          } else {
+            // Non-relay with numeric event and possible separate heat letter
+            if (tokens.length >= 3 && /^[A-Za-z]$/.test(tokens[1])) {
+              heatLetter = tokens[1].toUpperCase();
+              descriptionTokens = tokens.slice(2, tokens.length - 1);
+            } else {
+              heatLetter = "";
+              descriptionTokens = tokens.slice(1, tokens.length - 1);
+            }
+          }
+        }
+
+        if (eventNumber == null) continue;
+
+        const eventKey = `${eventNumber}${heatLetter}`;
+        let eventObj = eventsMap.get(eventKey);
+
+        if (!eventObj) {
+          eventObj = {
+            eventNumber,
+            heatLetter,
+            description: descriptionTokens.join(" "),
+            swimmers: [],
+            hasFavorite: false
+          };
+          eventsMap.set(eventKey, eventObj);
+          eventsArr.push(eventObj);
+        }
+
+        if (currentSwimmerBase) {
+          const displayName = `${currentSwimmerBase} (${currentSwimmerAge || "?"})`;
+          eventObj.swimmers.push({
+            displayName,
+            baseName: currentSwimmerBase,
+            seedTime
+          });
+          if (favoriteBaseNames.has(currentSwimmerBase)) {
+            eventObj.hasFavorite = true;
+          }
+        }
+      }
+
+      // Sort events by event number then heat letter A–Z
+      eventsArr.sort((a, b) => {
+        if (a.eventNumber !== b.eventNumber) {
+          return a.eventNumber - b.eventNumber;
+        }
+        const aHeat = a.heatLetter || "";
+        const bHeat = b.heatLetter || "";
+        return aHeat.localeCompare(bHeat);
+      });
+
+      return eventsArr;
+    }
+
+    const events = parseEvents(meetText);
+    let currentIndex = 0;
+    const doneFlags = new Array(events.length).fill(false);
+
+    const meetNameEl = document.getElementById("meetName");
+    const infoBoxEl = document.getElementById("infoBox");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const eventHeaderEl = document.getElementById("eventHeader");
+    const eventTitleEl = document.getElementById("eventTitle");
+    const eventDescEl = document.getElementById("eventDescription");
+    const eventMetaEl = document.getElementById("eventMeta");
+    const doneCheckbox = document.getElementById("doneCheckbox");
+    const nextFavBtn = document.getElementById("nextFavBtn");
+    const eventPanelTitleEl = document.getElementById("eventPanelTitle");
+    const swimmerListEl = document.getElementById("swimmerList");
+    const emptyStateEl = document.getElementById("emptyState");
+
+    function formatEventId(evt) {
+      return `${evt.eventNumber}${evt.heatLetter || ""}`;
+    }
+
+    function updateInfoBox() {
+      if (!events.length) {
+        infoBoxEl.textContent = "No events found in this meet.";
+        return;
+      }
+
+      const currentEvent = events[currentIndex];
+      const currentHasFav = !!currentEvent.hasFavorite;
+
+      let nextFavIndex = -1;
+      for (let i = currentIndex + 1; i < events.length; i++) {
+        if (events[i].hasFavorite) {
+          nextFavIndex = i;
+          break;
+        }
+      }
+
+      let message = "";
+      if (currentHasFav && nextFavIndex !== -1) {
+        const delta = nextFavIndex - currentIndex;
+        const nextEvt = events[nextFavIndex];
+        const nextId = formatEventId(nextEvt);
+        message =
+          `<strong>Your swimmers are in this event.</strong> ` +
+          `Next event with your swimmers is in ${delta} event(s): Event ${nextId}.`;
+      } else if (currentHasFav && nextFavIndex === -1) {
+        message =
+          `<strong>Your swimmers are in this event.</strong> ` +
+          `There are no more upcoming events for them after this.`;
+      } else if (!currentHasFav && nextFavIndex !== -1) {
+        const delta = nextFavIndex - currentIndex;
+        const nextEvt = events[nextFavIndex];
+        const nextId = formatEventId(nextEvt);
+        message =
+          `Next event with your swimmers is in ${delta} event(s): Event <strong>${nextId}</strong>.`;
+      } else {
+        message =
+          `There are no upcoming events with your five swimmers after this.`;
+      }
+
+      infoBoxEl.innerHTML = message;
+    }
+
+    function renderEventHeader() {
+      if (!events.length) {
+        eventTitleEl.textContent = "No events";
+        eventDescEl.textContent = "";
+        eventMetaEl.textContent = "";
+        eventHeaderEl.classList.remove("event-done");
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
+        return;
+      }
+
+      const evt = events[currentIndex];
+      const eventId = formatEventId(evt);
+      const heatText = evt.heatLetter ? `Heat ${evt.heatLetter}` : "Heat ?";
+      eventTitleEl.textContent = `Event ${evt.eventNumber} – ${heatText}`;
+      eventDescEl.textContent = evt.description || "No description available";
+
+      const pos = `Event ${currentIndex + 1} of ${events.length}`;
+      let metaHTML = pos;
+      if (evt.hasFavorite) {
+        metaHTML += ` <span class="pill">My swimmer here</span>`;
+      }
+      eventMetaEl.innerHTML = metaHTML;
+
+      const isDone = !!doneFlags[currentIndex];
+      if (isDone) {
+        eventHeaderEl.classList.add("event-done");
+      } else {
+        eventHeaderEl.classList.remove("event-done");
+      }
+
+      prevBtn.disabled = currentIndex === 0;
+      nextBtn.disabled = currentIndex === events.length - 1;
+    }
+
+    function renderSwimmers() {
+      swimmerListEl.innerHTML = "";
+      emptyStateEl.style.display = "none";
+
+      if (!events.length) {
+        emptyStateEl.textContent = "No swimmers to display.";
+        emptyStateEl.style.display = "block";
+        eventPanelTitleEl.textContent = "Swimmers & seed times";
+        return;
+      }
+
+      const evt = events[currentIndex];
+      const eventId = formatEventId(evt);
+      eventPanelTitleEl.textContent = `Swimmers & seed times for Event ${eventId}`;
+
+      if (!evt.swimmers.length) {
+        emptyStateEl.textContent = "No swimmers listed for this event.";
+        emptyStateEl.style.display = "block";
+        return;
+      }
+
+      for (const swimmer of evt.swimmers) {
+        const li = document.createElement("li");
+        li.className = "swimmer-row";
+
+        const isFavorite = favoriteBaseNames.has(swimmer.baseName);
+        if (isFavorite) {
+          li.classList.add("favorite");
+        }
+
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "swimmer-name";
+        nameSpan.textContent = swimmer.displayName;
+
+        if (isFavorite) {
+          const favSpan = document.createElement("span");
+          favSpan.className = "fav-tag";
+          favSpan.textContent = "My swimmer";
+          nameSpan.appendChild(favSpan);
+        }
+
+        const timeSpan = document.createElement("span");
+        timeSpan.className = "swimmer-time";
+        timeSpan.textContent = swimmer.seedTime || "NT";
+
+        li.appendChild(nameSpan);
+        li.appendChild(timeSpan);
+
+        swimmerListEl.appendChild(li);
+      }
+    }
+
+    function renderControls() {
+      if (!events.length) {
+        doneCheckbox.checked = false;
+        doneCheckbox.disabled = true;
+        nextFavBtn.disabled = true;
+        return;
+      }
+
+      doneCheckbox.disabled = false;
+      nextFavBtn.disabled = false;
+      doneCheckbox.checked = !!doneFlags[currentIndex];
+    }
+
+    function renderAll() {
+      renderEventHeader();
+      renderSwimmers();
+      renderControls();
+      updateInfoBox();
+    }
+
+    function goToEvent(index) {
+      if (index < 0 || index >= events.length) return;
+      currentIndex = index;
+      renderAll();
+    }
+
+    prevBtn.addEventListener("click", () => {
+      if (currentIndex > 0) {
+        goToEvent(currentIndex - 1);
+      }
+    });
+
+    nextBtn.addEventListener("click", () => {
+      if (currentIndex < events.length - 1) {
+        goToEvent(currentIndex + 1);
+      }
+    });
+
+    doneCheckbox.addEventListener("change", () => {
+      if (!events.length) return;
+      doneFlags[currentIndex] = doneCheckbox.checked;
+      renderEventHeader();
+    });
+
+    nextFavBtn.addEventListener("click", () => {
+      if (!events.length) return;
+      let targetIndex = -1;
+      for (let i = currentIndex + 1; i < events.length; i++) {
+        if (events[i].hasFavorite) {
+          targetIndex = i;
+          break;
+        }
+      }
+      if (targetIndex !== -1) {
+        goToEvent(targetIndex);
+      }
+    });
+
+    function init() {
+      const name = extractMeetName(meetText);
+      meetNameEl.textContent = name;
+
+      if (!events.length) {
+        infoBoxEl.textContent = "No events found in the uploaded meet file.";
+      }
+
+      goToEvent(0);
+    }
+
+    // Initialize once DOM is ready (script is at the end, so DOM is already available)
+    init();
+  </script>
+</body>
+</html>
